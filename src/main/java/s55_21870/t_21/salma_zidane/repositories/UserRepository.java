@@ -10,6 +10,7 @@ import tools.jackson.databind.ObjectMapper;
 import java.io.InputStream;
 import java.util.List;
 import java.util.Optional;
+import java.util.UUID;
 
 
 @Repository
@@ -40,51 +41,39 @@ public class UserRepository {
     }
 
     public Optional<User> findById(String id) {
-        return users.stream()
-                .filter(user -> user.getId().equals(id))
-                .findFirst();
+        return users.stream().filter(u -> u.getId().equals(id)).findFirst();
     }
 
     public Optional<User> findByUsername(String username) {
         return users.stream()
-                .filter(user -> user.getUsername().equals(username))
+                .filter(u -> u.getUsername().equalsIgnoreCase(username))
                 .findFirst();
     }
 
     public User save(User user) {
-        User newUser = new User(user.getUsername(), user.getEmail());
-        users.add(newUser);
-        new ObjectMapper().writeValue(jsonFile, users);
-        return newUser;
+        user.setId(UUID.randomUUID().toString());
+        users.add(user);
+        try { new ObjectMapper().writeValue(jsonFile, users); } catch (Exception e) { e.printStackTrace(); }
+        return user;
     }
 
     public Optional<User> update(String id, User updated) {
-        Optional<User> targetUser = users.stream()
-                .filter(user -> user.getId().equals(id))
-                .findFirst();
-
-        targetUser.ifPresent(user -> {
-            user.setUsername(updated.getUsername());
-            user.setEmail(updated.getEmail());
-
-        });
-
-        new ObjectMapper().writeValue(jsonFile, users);
-
-        return targetUser;
+        Optional<User> existing = findById(id);
+        if (existing.isPresent()) {
+            User u = existing.get();
+            u.setUsername(updated.getUsername());
+            u.setEmail(updated.getEmail());
+            try { new ObjectMapper().writeValue(jsonFile, users); } catch (Exception e) { e.printStackTrace(); }
+        }
+        return existing;
     }
 
     public boolean deleteById(String id) {
-        Optional<User> targetUser = users.stream()
-                .filter(user -> user.getUsername().equals(id))
-                .findFirst();
-
-        if (targetUser.isPresent()) {
-            users.remove(targetUser.get());
-            new ObjectMapper().writeValue(jsonFile, users);
-            return true;
+        boolean removed = users.removeIf(u -> u.getId().equals(id));
+        if (removed) {
+            try { new ObjectMapper().writeValue(jsonFile, users); } catch (Exception e) { e.printStackTrace(); }
         }
-        return false;
+        return removed;
     }
 
 }

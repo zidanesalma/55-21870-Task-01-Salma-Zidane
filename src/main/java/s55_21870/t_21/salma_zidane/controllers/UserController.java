@@ -3,6 +3,7 @@ package s55_21870.t_21.salma_zidane.controllers;
 import java.util.List;
 import java.util.Optional;
 
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
@@ -25,52 +26,54 @@ import s55_21870.t_21.salma_zidane.services.UserService;
 @RequestMapping("/users")
 public class UserController {
     private final UserService userService;
-    private final NoteService noteService;
+    private NoteService noteService;
+
+//    public UserController(UserService userService) {
+//        this.userService = userService;
+//    }
 
     public UserController(UserService userService, NoteService noteService) {
-        this.noteService = noteService;
         this.userService = userService;
+        this.noteService = noteService;
     }
 
-    // 1. GET /users — returns all users
     @GetMapping
     public List<User> getAllUsers() {
         return userService.getAllUsers();
     }
 
-    // 2. GET /users/{id} — returns a single user by id
     @GetMapping("/{id}")
     public User getUserById(@PathVariable String id) {
         return userService.getUserById(id);
     }
 
-    // 3. POST /users — accepts JSON without id and returns created user
     @PostMapping
     public User createUser(@RequestBody User user) {
         return userService.createUser(user);
     }
 
-    // 4. PUT /users/{id} — updates user and returns modified user
     @PutMapping("/{id}")
     public User updateUser(@PathVariable String id, @RequestBody User user) {
         return userService.updateUser(id, user);
     }
 
-    // 5. DELETE /users/{id} — removes user and returns nothing
     @DeleteMapping("/{id}")
-    public void deleteUser(@PathVariable String id) {
+    public User deleteUser(@PathVariable String id) {
+        User deletedUser = userService.getUserById(id); // throws 404 if not found
         userService.deleteUser(id);
+        return deletedUser; // returns 200 OK with deleted user JSON
     }
 
-    // 6. GET /users/search?username=... — case-insensitive search
+
     @GetMapping("/search")
-    public User getUserByUsername(@RequestParam String username) {
+    public User searchByUsername(@RequestParam String username) {
         return userService.getUserByUsername(username);
     }
 
     @GetMapping("/{id}/notes")
-    public List<Note> getNotesByUserId(@PathVariable String id) {
+    public List<Note> getNotesByUser(@PathVariable String id){
         return noteService.getNotesByUserId(id);
+
     }
 
 }

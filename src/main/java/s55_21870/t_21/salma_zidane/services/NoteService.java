@@ -15,56 +15,42 @@ public class NoteService {
 
     private final NoteRepository noteRepository;
 
-    public NoteService(NoteRepository noteRepository){
+    public NoteService(NoteRepository noteRepository) {
         this.noteRepository = noteRepository;
     }
+
     public List<Note> getAllNotes() {
         return noteRepository.findAll();
     }
 
-    public Note getNoteById(String id){
+    public Note getNoteById(String id) {
         return noteRepository.findById(id)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Note not found"));
     }
 
-    public List<Note> getNotesByUserId(String userId){
+    public List<Note> getNotesByUserId(String userId) {
         List<Note> notes = noteRepository.findByUserId(userId);
         if (notes.isEmpty()) {
-            throw new ResponseStatusException(
-                    HttpStatus.NOT_FOUND,
-                    "Note not found for this User " + userId
-            );
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "No notes for user: " + userId);
         }
         return notes;
     }
 
-    public List<Note> getNotesTitle(String title) {
-        List<Note> notes = noteRepository.findByTitle(title);
-
-        if (notes.isEmpty()) {
-            throw new ResponseStatusException(
-                    HttpStatus.NOT_FOUND,
-                    "No notes found with title containing: " + title
-            );
-        }
-
-        return notes;
-    }
-
-    public Note createNote(Note note){
+    public Note createNote(Note note) {
         return noteRepository.save(note);
     }
 
-    public Note updateNote(String id, Note note){
+    public Note updateNote(String id, Note note) {
         return noteRepository.update(id, note)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Note not found"));
     }
 
     public void deleteNote(String id) {
-        if (!noteRepository.deleteById(id))
+        boolean deleted = noteRepository.deleteById(id);
+        if (!deleted) {
             throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Note not found");
-        else
-            System.out.println("Note with ID =" + id + " was deleted successfully!");
+        }
     }
+
 
 }

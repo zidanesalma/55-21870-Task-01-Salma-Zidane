@@ -13,6 +13,7 @@ import tools.jackson.databind.ObjectMapper;
 import java.io.InputStream;
 import java.util.List;
 import java.util.Optional;
+import java.util.UUID;
 import java.util.stream.Collectors;
 
 @Repository
@@ -37,65 +38,41 @@ public class NoteRepository {
         this.notes = objectMapper.readValue(inputStream, new TypeReference<List<Note>>()
         {});
     }
+    public List<Note> findAll() { return notes; }
 
-    public List<Note> findAll(){
-        return notes;
-    }
-
-    public Optional<Note> findById(String id){
-        return notes.stream()
-                .filter(note -> note.getId().equals(id))
-                .findFirst();
+    public Optional<Note> findById(String id) {
+        return notes.stream().filter(n -> n.getId().equals(id)).findFirst();
     }
 
     public List<Note> findByUserId(String userId) {
-        return notes.stream()
-                .filter(note -> note.getUserId().equals(userId))
-                .collect(Collectors.toList());
-    }
-
-    public List<Note> findByTitle(String title){
-        return notes.stream()  // assuming `notes` is your in-memory list
-                .filter(note -> note.getTitle() != null
-                        && note.getTitle().toLowerCase().contains(title.toLowerCase()))
-                .collect(Collectors.toList());
+        return notes.stream().filter(n -> userId.equals(n.getUserId())).collect(Collectors.toList());
     }
 
     public Note save(Note note) {
-        Note newNote = new Note(note.getTitle(), note.getContent(), note.getUserId());
-        notes.add(newNote);
-        new ObjectMapper().writeValue(jsonFile, notes);
-        return newNote;
+        note.setId(UUID.randomUUID().toString());
+        notes.add(note);
+        try { new ObjectMapper().writeValue(jsonFile, notes); } catch (Exception e) { e.printStackTrace(); }
+        return note;
     }
 
     public Optional<Note> update(String id, Note updated) {
-        Optional<Note> targetNote = notes.stream()
-                .filter(note -> note.getId().equals(id))
-                .findFirst();
-
-        targetNote.ifPresent(note -> {
-            note.setTitle(updated.getTitle());
-            note.setContent(updated.getContent());
-            note.setUserId(updated.getUserId());
-        });
-
-        new ObjectMapper().writeValue(jsonFile, notes);
-
-        return targetNote;
+        Optional<Note> existing = findById(id);
+        if (existing.isPresent()) {
+            Note n = existing.get();
+            n.setTitle(updated.getTitle());
+            n.setContent(updated.getContent());
+            n.setUserId(updated.getUserId());
+            try { new ObjectMapper().writeValue(jsonFile, notes); } catch (Exception e) { e.printStackTrace(); }
+        }
+        return existing;
     }
 
     public boolean deleteById(String id) {
-        Optional<Note> targetNote = notes.stream()
-                .filter(note -> note.getId().equals(id))
-                .findFirst();
-
-        if (targetNote.isPresent()) {
-            notes.remove(targetNote.get());
-            new ObjectMapper().writeValue(jsonFile, notes);
-            return true;
+        boolean removed = notes.removeIf(n -> n.getId().equals(id));
+        if (removed) {
+            try { new ObjectMapper().writeValue(jsonFile, notes); } catch (Exception e) { e.printStackTrace(); }
         }
-        return false;
+        return removed;
     }
-
-
 }
+

@@ -2,8 +2,10 @@ package s55_21870.t_21.salma_zidane.controllers;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import org.springframework.web.server.ResponseStatusException;
@@ -20,43 +22,45 @@ public class NoteController {
         this.noteService = noteService;
     }
 
-    // 1. GET /notes — returns all notes
     @GetMapping
-    public List<Note> getAllUsers() {
+    public List<Note> getAllNotes() {
         return noteService.getAllNotes();
     }
 
-    // 2. GET /notes/{id} — returns a single note by id
     @GetMapping("/{id}")
     public Note getNoteById(@PathVariable String id) {
         return noteService.getNoteById(id);
     }
 
-
-    // 3. POST /notes — create a new note
     @PostMapping
-    @ResponseStatus(HttpStatus.CREATED)
     public Note createNote(@RequestBody Note note) {
         return noteService.createNote(note);
     }
 
-    // 4. GET /notes/search?title=... — case-insensitive search by title
     @GetMapping("/search")
-    public List<Note> searchNotes(@RequestParam String title) {
-        return noteService.getNotesTitle(title);
+    public Note searchNotes(@RequestParam String title) {
+
+        return noteService.getAllNotes().stream()
+                .filter(note -> note.getTitle()
+                        .toLowerCase()
+                        .contains(title.toLowerCase()))
+                .findFirst()
+                .orElseThrow(() -> new ResponseStatusException(
+                        HttpStatus.NOT_FOUND,
+                        "No notes found with title containing: " + title
+                ));
     }
 
-    // 5. PUT /notes/{id} — update a note
     @PutMapping("/{id}")
-    public Note updateNote(@PathVariable String id, @RequestBody Note updatedNote) {
-        return noteService.updateNote(id, updatedNote);
+    public Note updateNote(@PathVariable String id, @RequestBody Note note) {
+        return noteService.updateNote(id, note);
     }
 
-    // 6. DELETE /notes/{id} — delete a note
     @DeleteMapping("/{id}")
-    @ResponseStatus(HttpStatus.NO_CONTENT)
-    public void deleteNote(@PathVariable String id) {
+    public Note deleteNote(@PathVariable String id) {
+        Note deletedNote= noteService.getNoteById(id); // get it first (throws 404 if not found)
         noteService.deleteNote(id);
+        return deletedNote; // returns 200 OK with deleted note
     }
 
 }

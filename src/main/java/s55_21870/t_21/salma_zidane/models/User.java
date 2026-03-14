@@ -9,7 +9,8 @@ public class User {
     private LocalDateTime createdAt;
 
     public User(){
-
+        this.id = UUID.randomUUID().toString();
+        this.createdAt = LocalDateTime.now();
     }
 
     public User(String username, String email){

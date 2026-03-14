@@ -16,17 +16,13 @@ public class UserService {
         this.userRepository = userRepository;
     }
 
+
     public List<User> getAllUsers() {
         return userRepository.findAll();
     }
 
     public User getUserById(String id) {
         return userRepository.findById(id)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "User not found"));
-    }
-
-    public User getUserByUsername(String username) {
-        return userRepository.findByUsername(username)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "User not found"));
     }
 
@@ -40,9 +36,14 @@ public class UserService {
     }
 
     public void deleteUser(String id) {
-        if (!userRepository.deleteById(id))
+        boolean deleted = userRepository.deleteById(id);
+        if (!deleted) {
             throw new ResponseStatusException(HttpStatus.NOT_FOUND, "User not found");
-        else
-            System.out.println("User with ID =" + id + " was deleted successfully!");
+        }
+    }
+
+    public User getUserByUsername(String username) {
+        return userRepository.findByUsername(username)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "User not found"));
     }
 }
