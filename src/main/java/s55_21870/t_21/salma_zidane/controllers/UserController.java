@@ -16,15 +16,19 @@ import org.springframework.web.bind.annotation.RestController;
 
 import org.springframework.web.server.ResponseStatusException;
 
+import s55_21870.t_21.salma_zidane.models.Note;
 import s55_21870.t_21.salma_zidane.models.User;
+import s55_21870.t_21.salma_zidane.services.NoteService;
 import s55_21870.t_21.salma_zidane.services.UserService;
 
 @RestController
 @RequestMapping("/users")
 public class UserController {
     private final UserService userService;
+    private final NoteService noteService;
 
-    public UserController(UserService userService) {
+    public UserController(UserService userService, NoteService NoteService noteService) {
+        this.noteService = noteService;
         this.userService = userService;
     }
 
@@ -64,5 +68,9 @@ public class UserController {
         return userService.getUserByUsername(username);
     }
 
+    @GetMapping("/{id}/notes")
+    public List<Note> getNotesByUserId(@PathVariable String id) {
+        return noteService.getNotesByUserId(id);
+    }
 
 }
