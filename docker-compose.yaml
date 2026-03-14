@@ -1,0 +1,11 @@
+version: "3.8"
+
+services:
+  salma_zidane_app:
+    build: .
+    container_name: 55-21870_container
+    ports:
+      - "21870:8080"   # host port = second part of ID
+    environment:
+      USER_NAME: Compose_Salma_Zidane
+      ID: Compose_55_21870
